@@ -39,7 +39,7 @@
       </bpmn2:outputSet>
       <bpmn2:messageEventDefinition id="MessageEventDefinition_1" messageRef="Solicitud_Iniciativa"/>
     </bpmn2:startEvent>
-    <bpmn2:userTask id="UserTask_1" name="Analizar Iniciativa de Marketing" implementation="Java">
+    <bpmn2:userTask id="UserTask_1" name="Analizar Iniciativa de Marketing" implementation="##unspecified">
       <bpmn2:extensionElements>
         <tns:onExit-script scriptFormat="http://www.java.com/java">
           <tns:script>System.out.println(&quot;--Finalizando actividad - Analizar Iniciativa de Marketing&quot;);
@@ -135,7 +135,7 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
       </bpmn2:dataOutputAssociation>
       <bpmn2:potentialOwner id="PotentialOwner_1">
         <bpmn2:resourceAssignmentExpression id="ResourceAssignmentExpression_1">
-          <bpmn2:formalExpression id="FormalExpression_33">Analista_Marketing</bpmn2:formalExpression>
+          <bpmn2:formalExpression id="FormalExpression_33">Alejandro-Mesa</bpmn2:formalExpression>
         </bpmn2:resourceAssignmentExpression>
       </bpmn2:potentialOwner>
     </bpmn2:userTask>
