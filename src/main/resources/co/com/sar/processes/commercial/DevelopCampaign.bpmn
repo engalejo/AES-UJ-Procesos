@@ -6,6 +6,7 @@
   <bpmn2:itemDefinition id="ItemDefinition_790" isCollection="false" structureRef="Boolean"/>
   <bpmn2:itemDefinition id="ItemDefinition_2226" isCollection="false" structureRef="Object"/>
   <bpmn2:message id="Solicitud_Iniciativa" itemRef="ItemDefinition_4" name="Solicitud_Iniciativa"/>
+  <bpmn2:message id="MensajeRechazo" itemRef="ItemDefinition_790" name="MensajeRechazo"/>
   <bpmn2:process id="co.com.sar.processes.marketing.devcampaign" tns:packageName="co.com.sar.processes.commercial" tns:version="1.0" name="Desarrollar Campana de Marketing" isExecutable="true" processType="Private">
     <bpmn2:property id="solicitudIniciativa_Asunto" itemSubjectRef="ItemDefinition_4" name="solicitudIniciativa_Asunto"/>
     <bpmn2:property id="solicitudIniciativaMensaje" itemSubjectRef="ItemDefinition_4" name="solicitudIniciativaMensaje"/>
@@ -13,6 +14,7 @@
     <bpmn2:property id="iniciativaPlaneada" itemSubjectRef="ItemDefinition_790" name="iniciativaPlaneada"/>
     <bpmn2:property id="documentoPlan" itemSubjectRef="ItemDefinition_2226" name="documentoPlan"/>
     <bpmn2:property id="planAprobado" itemSubjectRef="ItemDefinition_790" name="planAprobado"/>
+    <bpmn2:property id="notficacionRechazoPlanrecibido" itemSubjectRef="ItemDefinition_790" name="notficacionRechazoPlanrecibido"/>
     <bpmn2:laneSet id="LaneSet_1" name="Lane Set 1">
       <bpmn2:lane id="Lane_1" name="Analista de Marketing">
         <bpmn2:flowNodeRef>StartEvent_1</bpmn2:flowNodeRef>
@@ -20,11 +22,13 @@
         <bpmn2:flowNodeRef>UserTask_1</bpmn2:flowNodeRef>
         <bpmn2:flowNodeRef>UserTask_4</bpmn2:flowNodeRef>
         <bpmn2:flowNodeRef>EndEvent_1</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_2</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>IntermediateCatchEvent_1</bpmn2:flowNodeRef>
       </bpmn2:lane>
       <bpmn2:lane id="Lane_3" name="Gerente Comercial">
         <bpmn2:flowNodeRef>UserTask_3</bpmn2:flowNodeRef>
         <bpmn2:flowNodeRef>ExclusiveGateway_1</bpmn2:flowNodeRef>
-        <bpmn2:flowNodeRef>EndEvent_2</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>IntermediateThrowEvent_1</bpmn2:flowNodeRef>
       </bpmn2:lane>
     </bpmn2:laneSet>
     <bpmn2:startEvent id="StartEvent_1" name="Solicitud de Iniciativa de Marketing">
@@ -318,17 +322,14 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
     <bpmn2:sequenceFlow id="SequenceFlow_5" tns:priority="1" sourceRef="UserTask_2" targetRef="UserTask_3"/>
     <bpmn2:exclusiveGateway id="ExclusiveGateway_1" name="Plan Aprobado" gatewayDirection="Diverging">
       <bpmn2:incoming>SequenceFlow_6</bpmn2:incoming>
-      <bpmn2:outgoing>SequenceFlow_7</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_6" tns:priority="1" sourceRef="UserTask_3" targetRef="ExclusiveGateway_1"/>
     <bpmn2:endEvent id="EndEvent_2" name="Plan no aprobado">
-      <bpmn2:incoming>SequenceFlow_7</bpmn2:incoming>
+      <bpmn2:incoming>SequenceFlow_11</bpmn2:incoming>
       <bpmn2:terminateEventDefinition id="TerminateEventDefinition_2"/>
     </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="SequenceFlow_7" tns:priority="1" name="No" sourceRef="ExclusiveGateway_1" targetRef="EndEvent_2">
-      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_6" language="http://www.java.com/java">return KieFunctions.isFalse(planAprobado);</bpmn2:conditionExpression>
-    </bpmn2:sequenceFlow>
     <bpmn2:userTask id="UserTask_4" name="Diseñar Campana">
       <bpmn2:extensionElements>
         <tns:onEntry-script scriptFormat="http://www.java.com/java">
@@ -408,6 +409,35 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_7" language="http://www.java.com/java">return KieFunctions.isTrue(planAprobado);</bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="SequenceFlow_9" tns:priority="1" sourceRef="UserTask_4" targetRef="EndEvent_1"/>
+    <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_1" name="Notificar Rechazo">
+      <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_10</bpmn2:outgoing>
+      <bpmn2:dataInput id="DataInput_1" itemSubjectRef="ItemDefinition_790" name="Mensaje"/>
+      <bpmn2:dataInputAssociation id="DataInputAssociation_1">
+        <bpmn2:sourceRef>planAprobado</bpmn2:sourceRef>
+        <bpmn2:targetRef>DataInput_1</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:inputSet id="InputSet_1">
+        <bpmn2:dataInputRefs>DataInput_1</bpmn2:dataInputRefs>
+      </bpmn2:inputSet>
+      <bpmn2:messageEventDefinition id="MessageEventDefinition_2" messageRef="MensajeRechazo"/>
+    </bpmn2:intermediateThrowEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_2" tns:priority="1" name="No" sourceRef="ExclusiveGateway_1" targetRef="IntermediateThrowEvent_1"/>
+    <bpmn2:intermediateCatchEvent id="IntermediateCatchEvent_1" name="Intermediate Catch Event 1">
+      <bpmn2:incoming>SequenceFlow_10</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_11</bpmn2:outgoing>
+      <bpmn2:dataOutput id="DataOutput_6" itemSubjectRef="ItemDefinition_790" name="MensajeRecibido"/>
+      <bpmn2:dataOutputAssociation id="DataOutputAssociation_6">
+        <bpmn2:sourceRef>DataOutput_6</bpmn2:sourceRef>
+        <bpmn2:targetRef>notficacionRechazoPlanrecibido</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:outputSet id="OutputSet_2" name="Output Set 2">
+        <bpmn2:dataOutputRefs>DataOutput_6</bpmn2:dataOutputRefs>
+      </bpmn2:outputSet>
+      <bpmn2:messageEventDefinition id="MessageEventDefinition_3" messageRef="MensajeRechazo"/>
+    </bpmn2:intermediateCatchEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_10" tns:priority="1" sourceRef="IntermediateThrowEvent_1" targetRef="IntermediateCatchEvent_1"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_11" tns:priority="1" sourceRef="IntermediateCatchEvent_1" targetRef="EndEvent_2"/>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="co.com.sar.processes.marketing.devcampaign">
@@ -426,13 +456,13 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="77.0" y="360.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_3" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="85.0" width="62.0" x="64.0" y="396.0"/>
+          <dc:Bounds height="45.0" width="72.0" x="59.0" y="396.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_UserTask_1" bpmnElement="UserTask_1">
         <dc:Bounds height="54.0" width="136.0" x="220.0" y="359.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_4" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="34.0" width="119.0" x="228.0" y="369.0"/>
+          <dc:Bounds height="30.0" width="121.0" x="227.0" y="371.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_1" bpmnElement="EndEvent_1">
@@ -450,7 +480,7 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
       <bpmndi:BPMNShape id="BPMNShape_UserTask_3" bpmnElement="UserTask_3">
         <dc:Bounds height="50.0" width="110.0" x="405.0" y="206.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_7" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="34.0" width="92.0" x="414.0" y="214.0"/>
+          <dc:Bounds height="30.0" width="99.0" x="410.0" y="216.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_1" bpmnElement="ExclusiveGateway_1" isMarkerVisible="true">
@@ -460,15 +490,27 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_2" bpmnElement="EndEvent_2">
-        <dc:Bounds height="36.0" width="36.0" x="820.0" y="213.0"/>
+        <dc:Bounds height="36.0" width="36.0" x="1120.0" y="360.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_9" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="34.0" width="62.0" x="807.0" y="249.0"/>
+          <dc:Bounds height="30.0" width="53.0" x="1112.0" y="396.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_UserTask_4" bpmnElement="UserTask_4">
         <dc:Bounds height="50.0" width="110.0" x="600.0" y="361.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_10" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="34.0" width="64.0" x="623.0" y="369.0"/>
+          <dc:Bounds height="15.0" width="102.0" x="604.0" y="378.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_1" bpmnElement="IntermediateThrowEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="841.0" y="213.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="30.0" width="51.0" x="834.0" y="249.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateCatchEvent_1" bpmnElement="IntermediateCatchEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="950.0" y="359.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="30.0" width="78.0" x="929.0" y="395.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_StartEvent_2" targetElement="BPMNShape_UserTask_1">
@@ -498,14 +540,6 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
         <di:waypoint xsi:type="dc:Point" x="624.0" y="231.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_14" labelStyle="BPMNLabelStyle_1"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_7" bpmnElement="SequenceFlow_7" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_EndEvent_2">
-        <di:waypoint xsi:type="dc:Point" x="674.0" y="231.0"/>
-        <di:waypoint xsi:type="dc:Point" x="747.0" y="231.0"/>
-        <di:waypoint xsi:type="dc:Point" x="820.0" y="231.0"/>
-        <bpmndi:BPMNLabel id="BPMNLabel_15" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="17.0" width="18.0" x="739.0" y="232.0"/>
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_8" bpmnElement="SequenceFlow_8" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_UserTask_4">
         <di:waypoint xsi:type="dc:Point" x="649.0" y="256.0"/>
         <di:waypoint xsi:type="dc:Point" x="649.0" y="304.0"/>
@@ -521,6 +555,26 @@ System.out.println(&quot;--La iniciativa fue Analizada y entendida: &quot; + ini
         <di:waypoint xsi:type="dc:Point" x="810.0" y="386.0"/>
         <di:waypoint xsi:type="dc:Point" x="835.0" y="386.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_17" labelStyle="BPMNLabelStyle_1"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_2" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_IntermediateThrowEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="674.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="757.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="841.0" y="231.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="15.0" width="16.0" x="751.0" y="232.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_10" bpmnElement="SequenceFlow_10" sourceElement="BPMNShape_IntermediateThrowEvent_1" targetElement="BPMNShape_IntermediateCatchEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="877.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="968.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="968.0" y="359.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_11" bpmnElement="SequenceFlow_11" sourceElement="BPMNShape_IntermediateCatchEvent_1" targetElement="BPMNShape_EndEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="986.0" y="377.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1053.0" y="378.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1120.0" y="378.0"/>
+        <bpmndi:BPMNLabel/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
     <bpmndi:BPMNLabelStyle id="BPMNLabelStyle_1">
